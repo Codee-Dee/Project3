@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Converter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">csv-json</a> &gt; <a href="index.source.html" class="el_package">edu.jsu.mcis</a> &gt; <span class="el_source">Converter.java</span></div><h1>Converter.java</h1><pre class="source lang-java linenums">package edu.jsu.mcis;
+
+import java.io.*;
+import java.util.*;
+import au.com.bytecode.opencsv.*;
+import org.json.simple.*;
+import org.json.simple.parser.*;
+
+<span class="nc" id="L9">public class Converter {</span>
+    
+    public static String loadFile(String path) throws IOException {
+<span class="fc" id="L12">        File inputFile = new File(path);</span>
+<span class="fc" id="L13">        Scanner scanner = new Scanner(inputFile);</span>
+<span class="fc" id="L14">        String output = &quot;&quot;;</span>
+        
+<span class="fc bfc" id="L16" title="All 2 branches covered.">        while(scanner.hasNextLine()) {</span>
+<span class="fc" id="L17">            output += scanner.nextLine() + &quot;\n&quot;;</span>
+        }
+<span class="fc" id="L19">        scanner.close();</span>
+<span class="fc" id="L20">        return output;</span>
+    }
+    
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public static String csvToJson(String csvString) {
+<span class="fc" id="L25">        JSONObject jsonObj = new JSONObject();</span>
+        
+<span class="fc" id="L27">        JSONArray colHeaders = new JSONArray();</span>
+<span class="fc" id="L28">        colHeaders.add(&quot;Total&quot;);</span>
+<span class="fc" id="L29">        colHeaders.add(&quot;Assignment 1&quot;);</span>
+<span class="fc" id="L30">        colHeaders.add(&quot;Assignment 2&quot;);</span>
+<span class="fc" id="L31">        colHeaders.add(&quot;Exam 1&quot;);</span>
+        
+<span class="fc" id="L33">        JSONArray rowHeaders = new JSONArray();</span>
+<span class="fc" id="L34">        JSONArray data = new JSONArray();</span>
+        
+<span class="fc" id="L36">        jsonObj.put(&quot;colHeaders&quot;, colHeaders);</span>
+<span class="fc" id="L37">        jsonObj.put(&quot;rowHeaders&quot;, rowHeaders);</span>
+<span class="fc" id="L38">        jsonObj.put(&quot;data&quot;, data);</span>
+        
+<span class="fc" id="L40">        CSVParser csvParser = new CSVParser();</span>
+<span class="fc" id="L41">        BufferedReader bufferedReader = new BufferedReader(new StringReader(csvString));</span>
+        
+        try {
+<span class="fc" id="L44">            String line = bufferedReader.readLine();</span>
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            while ((line = bufferedReader.readLine()) != null ) {</span>
+<span class="fc" id="L47">                String[] input = csvParser.parseLine(line);</span>
+<span class="fc" id="L48">                JSONArray dataRow = new JSONArray();</span>
+                
+<span class="fc" id="L50">                rowHeaders.add(input[0]);</span>
+<span class="fc" id="L51">                dataRow.add(new Integer(input[1]));</span>
+<span class="fc" id="L52">                dataRow.add(new Integer(input[2]));</span>
+<span class="fc" id="L53">                dataRow.add(new Integer(input[3]));</span>
+<span class="fc" id="L54">                dataRow.add(new Integer(input[4]));</span>
+<span class="fc" id="L55">                data.add(dataRow);</span>
+<span class="fc" id="L56">            }</span>
+<span class="nc" id="L57">        } catch(IOException exception) {</span>
+<span class="fc" id="L58">        }</span>
+<span class="fc" id="L59">        return jsonObj.toString();</span>
+    }
+    
+    public static String jsonToCsv(String jsonString) {
+<span class="fc" id="L63">        JSONObject jsonObj = null;</span>
+
+        try {
+<span class="fc" id="L66">            JSONParser jsonParser = new JSONParser();</span>
+<span class="fc" id="L67">            jsonObj = (JSONObject) jsonParser.parse(jsonString);</span>
+<span class="nc" id="L68">        } catch (Exception exception) {</span>
+<span class="nc" id="L69">            exception.printStackTrace();</span>
+<span class="fc" id="L70">        }</span>
+
+<span class="fc" id="L72">        String csvContent = &quot;\&quot;ID\&quot;,&quot; + Converter.&lt;String&gt;joinArray((JSONArray) jsonObj.get(&quot;colHeaders&quot;)) + &quot;\n&quot;;</span>
+
+<span class="fc" id="L74">        JSONArray rowHeaders = (JSONArray) jsonObj.get(&quot;rowHeaders&quot;);</span>
+<span class="fc" id="L75">        JSONArray rowData = (JSONArray) jsonObj.get(&quot;data&quot;);</span>
+<span class="fc" id="L76">        int numOfHeaders = rowHeaders.size();</span>
+        
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (int i = 0; i &lt; numOfHeaders; i++) {</span>
+<span class="fc" id="L79">            csvContent += (</span>
+                &quot;\&quot;&quot;+ (String) rowHeaders.get(i) + &quot;\&quot;,&quot; +
+                Converter.&lt;Double&gt;joinArray((JSONArray) rowData.get(i)) + &quot;\n&quot;);
+        }
+<span class="fc" id="L83">        return csvContent;</span>
+    }
+    
+    @SuppressWarnings(&quot;unchecked&quot;)
+    private static &lt;T&gt; String joinArray(JSONArray inputJSONArray) {
+<span class="fc" id="L88">        String ouput = &quot;&quot;;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (int i = 0, length = inputJSONArray.size(); i &lt; length; i++) {</span>
+<span class="fc" id="L90">            ouput += &quot;\&quot;&quot; + ((T) inputJSONArray.get(i)) + &quot;\&quot;&quot;;</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            if (i &lt; length - 1) {</span>
+<span class="fc" id="L92">                ouput += &quot;,&quot;;</span>
+            }
+        }
+<span class="fc" id="L95">        return ouput;</span>
+    }
+
+    public static boolean jsonStringsAreEqual(String a, String b) {
+        try {
+<span class="fc" id="L100">            return jsonEqaul(new JSONParser().parse(a), new JSONParser().parse(b));</span>
+<span class="nc" id="L101">        } catch (Exception exception) {</span>
+<span class="nc" id="L102">            exception.printStackTrace();</span>
+<span class="nc" id="L103">            return false;</span>
+        }
+    }
+
+   private static boolean jsonEqaul(Object a, Object b) {
+<span class="pc bpc" id="L108" title="1 of 4 branches missed.">        if (a instanceof JSONObject &amp;&amp; b instanceof JSONObject) {</span>
+<span class="fc" id="L109">            return jsonObjectEqaul((JSONObject) a, (JSONObject) b);</span>
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        } else if (a instanceof JSONArray &amp;&amp; b instanceof JSONArray) {</span>
+<span class="fc" id="L111">            return jsonArrayEqaul((JSONArray) a, (JSONArray) b);</span>
+        } else {
+<span class="fc" id="L113">            return a.equals(b);</span>
+        }
+    }
+    
+    private static boolean jsonObjectEqaul(JSONObject a, JSONObject b) {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        for (Object k : a.keySet()) {</span>
+<span class="fc" id="L119">            String key = (String) k;</span>
+
+<span class="pc bpc" id="L121" title="2 of 4 branches missed.">            if (!b.containsKey(key) || !jsonEqaul(a.get(key), b.get(key))) {</span>
+<span class="nc" id="L122">                return false;</span>
+            }
+<span class="fc" id="L124">        }</span>
+<span class="fc" id="L125">        return true;</span>
+    }
+    
+    private static boolean jsonArrayEqaul(JSONArray a, JSONArray b) {
+<span class="fc" id="L129">        int aSize = a.size();</span>
+
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (aSize != b.size()) {</span>
+<span class="nc" id="L132">            return false;</span>
+        } else {
+<span class="fc bfc" id="L134" title="All 2 branches covered.">            for (int i = 0, il = aSize; i &lt; il; i++) {</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                if (!jsonEqaul(a.get(i), b.get(i))) {</span>
+<span class="nc" id="L136">                    return false;</span>
+                }
+            }
+<span class="fc" id="L139">            return true;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>
